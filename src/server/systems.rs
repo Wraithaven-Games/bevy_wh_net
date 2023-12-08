@@ -11,9 +11,10 @@ use super::{
     OnClientDisconnected,
     OnReceivePacketFromClient,
 };
-use crate::common::{KickPacket, PacketContainer};
+use crate::common::{KickPacket, LoginData, PacketContainer};
 
 pub(super) fn server_event_handler(
+    transport: Res<NetcodeServerTransport>,
     mut clients: Query<(Entity, &mut ClientConnection)>,
     mut server_events: EventReader<ServerEvent>,
     mut connected_events: EventWriter<OnClientConnected>,
@@ -23,11 +24,16 @@ pub(super) fn server_event_handler(
     for event in server_events.read() {
         match event {
             ServerEvent::ClientConnected { client_id } => {
-                let id = commands.spawn((ClientConnection::new(*client_id),)).id();
+                let id = commands.spawn(ClientConnection::new(*client_id)).id();
+                let login_data = transport
+                    .user_data(*client_id)
+                    .as_ref()
+                    .map(|data| LoginData::from_bytes(data).unwrap());
 
                 connected_events.send(OnClientConnected {
                     client_id: *client_id,
                     entity: id,
+                    login_data,
                 });
 
                 info!("Client {} connected.", client_id);

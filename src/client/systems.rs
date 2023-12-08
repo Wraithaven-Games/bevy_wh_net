@@ -39,7 +39,7 @@ pub(super) fn connect_to_server(
             protocol_id: *PROTOCOL_ID,
             client_id: time.as_millis() as u64,
             server_addr: *addr,
-            user_data: None,
+            user_data: event.login_data.as_ref().map(|data| data.as_bytes()),
         };
 
         let transport = NetcodeClientTransport::new(time, auth, socket).unwrap();
